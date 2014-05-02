@@ -1,22 +1,22 @@
-# DNS no-ip automatic DNS updates 
-# Informasi account di no-ip.com 
-:global usernoip "yudha2992"
-:global passnoip "yudha29#@"
-:global hostnamenoip "beliangnet.noip.me"
-# Edit variabel selesai di sini 
+# DDNS no-ip automatic DNS updates behind NAT in Mikrotik
+# Info account noip.com 
+# Start variabel
+:global usernoip "username"
+:global passnoip "password"
+:global hostnamenoip "host, you created on noip.com"
+# End variabel
 
 :global previousIP 
 
-# Print di log untuk debug 
+# Print log 
 :log info "DNSNoIP: Updating dynamic IP on DNS for host $hostnamenoip" 
 :log info "DNSNoIP: Pass $passnoip" 
 :log info "DNSNoIP: Last IP $previousIP" 
-# mendapatkan IP public di intenet, bisa juga 
-# dengan script PHP jika punya hosting support PHP 
+# get public IP on the intenet, could also have a PHP script if the hosting support PHP 
 /tool fetch url="http://checkip.dyndns.org/" dst-path="/ddnsnoip.html" 
 :local hasil [/file get ddnsnoip.html contents] 
 
-# Edit untuk mendapatkan IP terbaru 
+# Edit to get the latest IP 
 :local hasilLen [:len $hasil] 
 :local startLoc [:find $hasil ": " -1] 
 :set startLoc ($startLoc + 2) 
@@ -24,16 +24,15 @@
 :global currentIP [:pick $hasil $startLoc $endLoc] 
 :log info "DNSNoIP: IP sekarang $currentIP" 
 
-# persiapan update 
+# Update 
 :local str "nic/update?hostname=$hostnamenoip&myip=$currentIP" 
 :if ($currentIP != $previousIP) do={ 
-:log info "DNSNoIP: Dibutuhkan Update" 
+:log info "DNSNoIP: Membutuhkan Update" 
 :set previousIP $currentIP 
 :log info "DNSNoIP: Kirim Update $currentIP" 
 :log info [:put [/tool fetch user="$usernoip" password="$passnoip" \ 
 url="http://dynupdate.no-ip.com/$str" dst-path="/$hostnamenoip"]] 
-:log info "DNSNoIP: Host $hostnamenoip telah terupdate di DNSNoIP dengan IP $currentIP" 
-/ip firewall nat set 11 dst-address=$currentIP
+:log info "DNSNoIP: Host $hostnamenoip telah terupdate di DNSNoIP dengan IP berikut $currentIP" 
 } else={ 
 :log info "DNSNoIP: IP sebelumnya $previousIP dan \ 
-IP sekarang $currentIP sama, tidak dibutuhkan update"}
+IP sekarang $currentIP sama, tidak perlu update"}
