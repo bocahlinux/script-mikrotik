@@ -18,5 +18,4 @@
 	:local currentIP [:pick $result $startLoc $endLoc]
 	:set lastwanip $currentIP;
 	:put [/tool dns-update name=$host address=$currentIP key-name=$user key=$pass ]
-                /ip firewall nat set 11 dst-address=$currentIP
 }
