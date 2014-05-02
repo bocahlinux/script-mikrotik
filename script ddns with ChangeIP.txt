@@ -1,0 +1,23 @@
+# Dynamic DNS for ChangeIP.com behind NAT
+# Modified by Jorge Amaral, officelan.pt
+# Here is where you need to set your definitions
+:local user "username"
+:local pass "password"
+:local host "host"
+##############
+##############
+:global lastwanip;
+:if ([ :typeof $lastwanip ] = "nothing" ) do={ :global lastwanip 0.0.0.0 };
+:local wanip [:resolve $host];
+:if ( $wanip != $lastwanip ) do={
+	/tool fetch mode=http address="checkip.dyndns.org" src-path="/" dst-path="/dyndns.checkip.html"
+	:local result [/file get dyndns.checkip.html contents]
+	:local resultLen [:len $result]
+	:local startLoc [:find $result ": " -1]
+	:set startLoc ($startLoc + 2)
+	:local endLoc [:find $result "</body>" -1]
+	:local currentIP [:pick $result $startLoc $endLoc]
+	:set lastwanip $currentIP;
+	:put [/tool dns-update name=$host address=$currentIP key-name=$user key=$pass ]
+                /ip firewall nat set 11 dst-address=$currentIP
+}
